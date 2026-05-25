@@ -39,5 +39,49 @@ $$\frac{d\mathbf{r}}{ds} = \frac{\mathbf{u}}{n} \quad ; \quad \frac{d\mathbf{u}}
 ---
 
 ## ⚙️ Alur Kerja Algoritma (Workflow)
+# Alur Pemrosesan Sinyal AtmoCorrect-Ray (Workflow)
+
+Dokumen ini menjelaskan arsitektur logika dan alur data dari sistem komputasi Kelompok 9, dimulai dari penangkapan sinyal mentah multi-frekuensi dari satelit hingga menghasilkan output koordinat sub-sentimeter yang siap digunakan untuk keperluan eksplorasi geofisika presisi tinggi.
+
+---
+
+## 📊 Diagram Alur Sistem (Mermaid Flowchart)
+
+```mermaid
+graph TD
+    %% Penerimaan Data Input
+    A[Satelit GNSS: Pancaran Sinyal Mentah] -->|Frekuensi L1, L2, L5| B(Antena Base Station / Rover)
+    
+    %% Tahap 1: Pemrosesan Ionosfer
+    B --> C[Tahap 1: Dekomposisi Efek Ionosfer Dispersif]
+    C -->|Kombinasi Linier Pembobot| D{Fase Bebas Ionosfer: &Phi;_IF}
+    
+    %% Tahap 2: Pemodelan Troposfer
+    E[Model Empiris Atmosfer Berlapis] -->|Inisialisasi Refraktivitas N| F[Tahap 2: Pembentukan Profil Indeks Bias 3D Awal]
+    D --> F
+    
+    %% Tahap 3: Pelacakan Berkas Sinar
+    F --> G[Tahap 3: Pelacakan Lintasan Melengkung Sinar]
+    subgraph Hirose & Lonngren Ray-Tracing Engine (RK4)
+        G --> H[Reduksi PD Orde 2 ke Orde 1 Berpasangan]
+        H --> I[Integrasi Maju dr/ds & du/ds]
+    end
+    
+    %% Tahap 4: Inversi Tomografi
+    I -->|Panjang Lintasan Busur nyata S| J[Tahap 4: Penghitungan Slant Delay &Delta;&tau;]
+    J --> K[Diskretisasi Ruang Atmosfer ke Grid Voksel 3D]
+    K --> L[Inversi Numerik Weighted Least Squares: y = Ax + e]
+    
+    %% Tahap 5: Output Akhir
+    L -->|Pembaruan Model Indeks Bias Konvergen| M[Tahap 5: Reduksi Bias Fase Utama]
+    M --> N[Estimator Posisi Akhir: Modul RTK / PPP]
+    N -->|Akurasi Tinggi| O[Data Koordinat Terkoreksi: Sub-Sentimeter 0.5 - 3 cm]
+
+    %% Gaya Visual Diagram
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style O fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#fff,stroke:#333,stroke-width:1px
+    style J fill:#fff,stroke:#333,stroke-width:1px
+
 
 
